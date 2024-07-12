@@ -14,8 +14,9 @@ contract Hello {
         name = value;
     }
 
-    function retrieve_value() public view returns (address) {
-        return msg.sender;
+    function get_block_number() external view returns (uint256) {
+       //block - read only
+        return block.number;
     }
     
 
