@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: GPL-3.0
+/**
+ * @title Hello
+ * @dev ContractDescription
+ * @custom:dev-run-script NatSpec
+ */
+
+pragma solidity >=0.8.2 <0.9.0;
+
+contract Hello {
+    string name;
+
+    function store_value(string memory value) public {
+        name = value;
+    }
+
+    function retrieve_value() public view returns (address) {
+        return msg.sender;
+    }
+    
+
+    //call data- immutability
+    function StringManupulation(uint256[3] calldata _arr)
+        external
+        pure
+        returns (uint256[3] calldata)
+    {
+        //_arr[0] =1; // not allowed with calldata
+        return _arr;
+    }
+
+    //memory - mutability - change is allowed
+    function StringManupulation2(uint256[3] memory _arr)
+        external
+        pure
+        returns (uint256[3] memory)
+    {
+        _arr[0] = 1; // not allowed with calldata , with memory allowd
+        return _arr;
+    }
+}
