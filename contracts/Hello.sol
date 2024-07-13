@@ -59,7 +59,7 @@ contract Hello {
     }
 
     uint256 nextCandidateId;
-    Candidate[] candidateDetails = new Candidate[](10);
+    Candidate[] candidateDetails ;
 
     function getCandidateList() public view returns (Candidate[] memory) {
         Candidate[] memory candidateList = new Candidate[](nextCandidateId - 1);
@@ -70,7 +70,7 @@ contract Hello {
         return candidateList;
     }
 
-    Voter[] voterDetails = new Voter[](10);
+    Voter[] voterDetails;
 
     function castVote(uint256 _voterId, uint256 _candidateId) external {
         require(
