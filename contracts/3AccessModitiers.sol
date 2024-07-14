@@ -7,7 +7,7 @@ contract Parent {
         // f2();
         // f3();
         // f4(); // not allowed
-        // return "1";
+         return "1";
     }
 
     function f2() private pure returns (string memory) {
@@ -30,10 +30,19 @@ contract Parent {
         // f3();
         return "4";
     }
+    
+    function f5() external pure returns (string memory) {
+        // f1();
+        // f2();
+        // f3();
+        //f4(); //not allowed
+        return "4";
+    }
+
 }
 
 contract Child is Parent {
-    function f5() public pure {
+    function f6() public pure {
         f1();
         f3();
     }
