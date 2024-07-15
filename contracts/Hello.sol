@@ -40,51 +40,13 @@ contract Hello {
         return _arr;
     }
 
-    uint256[3] arr;
-
-    function StringManupulation3() external view returns (uint256[3] memory) {
-        return arr;
-    }
-
-    struct Candidate {
-        uint256 age;
-        string name;
-    }
-
-    struct Voter {
-        uint256 age;
-        string name;
-        uint256 voteCandidateId;
-        address voterAddress;
-    }
-
-    uint256 nextCandidateId;
-    Candidate[] candidateDetails ;
-
-    function getCandidateList() public view returns (Candidate[] memory) {
-        Candidate[] memory candidateList = new Candidate[](nextCandidateId - 1);
-
-        for (uint256 i = 0; i < candidateList.length; i++) {
-            candidateList[i] = candidateDetails[i + 1];
+    function getList() public pure returns (uint[] memory) {
+        uint[] memory list ; // Initialize with a size of 10
+        for (uint i = 0; i < 10; i++) {
+            list[i] = i*5;
         }
-        return candidateList;
+        return list;
     }
 
-    Voter[] voterDetails;
 
-    function castVote(uint256 _voterId, uint256 _candidateId) external {
-        require(
-            voterDetails[_voterId].voteCandidateId == 0,
-            "You have already voted"
-        );
-        require(
-            voterDetails[_voterId].voterAddress == msg.sender,
-            "You are not authourized"
-        );
-        require(
-            _candidateId >= 1 && _candidateId < 3,
-            "Candidate Id is not correct"
-        );
-        voterDetails[_voterId].voteCandidateId = _candidateId; //voting to _candidateId candidateDetails[_candidateId].votes++; //increment _candidateId votes
-    }
 }

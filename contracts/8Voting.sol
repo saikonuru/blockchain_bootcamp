@@ -1,30 +1,36 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.26;
 
 contract Vote {
+    //first entity
     struct Voter {
         string name;
         uint256 age;
         uint256 voterId;
         Gender gender;
-        uint256 voteCandidateId;
-        address voterAddress;
+        uint256 voteCandidateId; //candidate id to whom the voter has voted
+        address voterAddress; //EOA of the voter
     }
 
+    //second entity
     struct Candidate {
         string name;
         string party;
         uint256 age;
         Gender gender;
         uint256 candidateId;
-        address candidateAddress;
-        uint256 votes;
+        address candidateAddress; //candidate EOA
+        uint256 votes; //number of votes
     }
 
-    address electionCommission;
+    //third entity
+    address public electionCommission;
     address public winner;
     uint256 nextVoterId = 1;
     uint256 nextCandidateId = 1;
+
+    //voting period
     uint256 startTime;
     uint256 endTime;
     bool stopVoting;
@@ -45,40 +51,51 @@ contract Vote {
     }
 
     constructor() {
-        electionCommission = msg.sender;
+        electionCommission = msg.sender; //msg.sender is a global variable
     }
 
     modifier isVotingOver() {
         require(
-            block.timestamp < endTime && stopVoting == false,
-            "Voting Completed"
+            block.timestamp <= endTime && stopVoting == false,
+            "Voting time is over"
         );
         _;
     }
 
-    modifier ageCheck(uint256 _age) {
-        require(_age >= 18, "You are below 18");
-        _;
-    }
+    // end time - 1720540700 - Tuesday, 9 July 2024 21:28:20
+    // current time - 1720540861 - Tuesday, 9 July 2024 21:31:01
 
     modifier onlyCommissioner() {
-        require(msg.sender == electionCommission, "You are not authorized");
+        require(msg.sender == electionCommission, "Not authuorized");
         _;
     }
 
-    // use calldata to make the variable as immumutable
-    // memory mutable
+    modifier isValidAge(uint256 _age) {
+        require(_age >= 18, "not eligible for voting");
+        _;
+    }
+
     function registerCandidate(
         string calldata _name,
         string calldata _party,
         uint256 _age,
         Gender _gender
-    ) external {
+    ) external isValidAge(_age) {
+        require(
+            isCandidateNotRegistered(msg.sender),
+            "You are already registered"
+        );
+        require(nextCandidateId < 3, "Candidate Registration Full");
+        require(
+            msg.sender != electionCommission,
+            "Election Commision not allowed to register"
+        );
+
         candidateDetails[nextCandidateId] = Candidate({
             name: _name,
             party: _party,
-            age: _age,
             gender: _gender,
+            age: _age,
             candidateId: nextCandidateId,
             candidateAddress: msg.sender,
             votes: 0
@@ -87,25 +104,28 @@ contract Vote {
     }
 
     function isCandidateNotRegistered(address _person)
-        internal
+        private
         view
         returns (bool)
     {
         for (uint256 i = 1; i < nextCandidateId; i++) {
-            if (candidateDetails[i].candidateAddress == _person) return false;
+            if (candidateDetails[i].candidateAddress == _person) {
+                return false;
+            }
         }
-
         return true;
     }
 
-    function getCandidateList() public view returns (Candidate[] memory) {}
+    function getCandidateList() public view returns (Candidate[] memory) {
+        Candidate[] memory candidateList = new Candidate[](nextCandidateId - 1); //initialize an empty array of length = `nextCandidateId - 1`
+        for (uint256 i = 0; i < candidateList.length; i++) {
+            candidateList[i] = candidateDetails[i + 1];
+        }
+        return candidateList;
+    }
 
-    function isVoterNotRegistered(address _person)
-        internal
-        view
-        returns (bool)
-    {
-        for (uint256 i = 0; i < nextVoterId; i++) {
+    function isVoterNotRegistered(address _person) private view returns (bool) {
+        for (uint256 i = 1; i < nextVoterId; i++) {
             if (voterDetails[i].voterAddress == _person) {
                 return false;
             }
@@ -117,46 +137,87 @@ contract Vote {
         string calldata _name,
         uint256 _age,
         Gender _gender
-    ) external ageCheck(_age) {
+    ) external isValidAge(_age) {
         require(isVoterNotRegistered(msg.sender), "You are already registered");
-        require(
-            msg.sender != electionCommission,
-            "Eleion comission not allowed to regisrter"
-        );
 
         voterDetails[nextVoterId] = Voter({
             name: _name,
             age: _age,
-            gender: _gender,
-            voterAddress: msg.sender,
             voterId: nextVoterId,
-            voteCandidateId: 0
+            gender: _gender,
+            voteCandidateId: 0,
+            voterAddress: msg.sender
         });
         nextVoterId++;
     }
 
     function getVoterList() public view returns (Voter[] memory) {
-        Voter[] memory _list;
-
-        for (uint256 i = 1; i < nextVoterId; i++) {
-            _list[i] = voterDetails[i];
+        uint256 lengthArr = nextVoterId - 1;
+        Voter[] memory voterList = new Voter[](lengthArr);
+        for (uint256 i = 0; i < voterList.length; i++) {
+            voterList[i] = voterDetails[i + 1];
         }
-
-        return _list;
+        return voterList;
     }
 
-    function castVote(uint256 _voterId, uint256 _id) external {}
-
-    function setVotingPeriod(uint256 _startTime, uint256 _endTime)
+    function castVote(uint256 _voterId, uint256 _candidateId)
         external
-        onlyCommissioner
-    {}
+        isVotingOver
+    {
+        require(block.timestamp >= startTime, "Voting has not started yet");
+        require(
+            voterDetails[_voterId].voteCandidateId == 0,
+            "You have already voted"
+        );
+        require(
+            voterDetails[_voterId].voterAddress == msg.sender,
+            "You are not authourized"
+        );
+        require(
+            _candidateId >= 1 && _candidateId < 3,
+            "Candidate Id is not correct"
+        );
+        voterDetails[_voterId].voteCandidateId = _candidateId; //voting to _candidateId
+        candidateDetails[_candidateId].votes++; //increment _candidateId votes
+    }
 
-    function getVotingStatus() public view returns (VotingStatus) {}
+    function setVotingPeriod(
+        uint256 _startTimeDuration,
+        uint256 _endTimeDuration
+    ) external onlyCommissioner {
+        require(
+            _endTimeDuration > 3600,
+            "_endTimeDuration must be greater than 1 hour"
+        );
+        startTime = 1721033636 + _startTimeDuration; //_startTimeDuration = 3600 , _endTimeDuration = 3600
+        endTime = startTime + _endTimeDuration;
+    }
 
-    function announceVotingResult() external onlyCommissioner {}
+    function getVotingStatus() public view returns (VotingStatus) {
+        if (startTime == 0) {
+            return VotingStatus.NotStarted;
+        } else if (endTime > block.timestamp && stopVoting == false) {
+            return VotingStatus.InProgress;
+        } else {
+            return VotingStatus.Ended;
+        }
+    }
+
+    function announceVotingResult() external onlyCommissioner {
+        uint256 max = 0;
+        for (uint256 i = 1; i < nextCandidateId; i++) {
+            if (candidateDetails[i].votes > max) {
+                max = candidateDetails[i].votes;
+                winner = candidateDetails[i].candidateAddress;
+            }
+        }
+    }
 
     function emergencyStopVoting() public onlyCommissioner {
         stopVoting = true;
     }
+
+    //if votingStatus==NotStarted then do this
+    //else if votingStatus==Started then do that
+    //else bla bla
 }
