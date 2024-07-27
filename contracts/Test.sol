@@ -2,25 +2,35 @@
 pragma solidity 0.8.19;
 
 contract demo {
-    struct USER {
+    struct User{
         uint id;
         string name;
     }
 
-    USER[] list;
-    uint _id = 0;
-
-    function insert(string memory name) public {
-        USER memory usr = USER({id: _id, name: name});
-        list.push(usr);
-        _id++;
+    User[] public users;
+    uint public userCount;
+    
+    function insert(string memory _name) public {
+        uint _id = userCount+1;
+        users.push(User(_id,_name));
+        userCount++;
     }
 
-    function read() public view returns (USER[] memory) {
-        return list;
+     function read(uint _id) public view returns (uint, string memory) {
+        for (uint i = 0; i < users.length; i++) {
+            if (users[i].id != _id) continue;
+            return (users[i].id,users[i].name);
+        }
+        revert("User does not exist!");
     }
 
-    function find(uint id) public view returns (USER memory) {
-        return list[id];
+
+    function find(uint _id) public view returns (string memory) {
+        for (uint i = 0; i < users.length; i++) {
+            if (users[i].id != _id) continue;
+            return (users[i].name);
+        }
+        revert("User does not exist!");
     }
 }
+
