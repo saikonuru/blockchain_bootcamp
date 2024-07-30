@@ -32,5 +32,13 @@ contract demo {
         }
         revert("User does not exist!");
     }
+
+    event Traansfer(uint,string,string,uint);
+    uint balance = 100;
+    function TransferAmount(uint amount) external  {
+       require(balance>amount,"insuicient balance");
+       balance -= amount;
+        emit Traansfer(amount," Transfered", "balance :" , balance);
+    }
 }
 
