@@ -13,7 +13,7 @@ contract Slots {
     //     bool thirdValue;
     // }
 
-    // uint256 aa = 1234;
+    // uint256 aa = 1234; 
     // uint256 bb = 0x123456;
     // someStruct structVar = someStruct(0x234, 5, true);
 
