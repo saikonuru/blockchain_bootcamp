@@ -206,12 +206,60 @@ contract StringHandlingExample {
         bytes1 firstChar;
 
         assembly {
-            let inputPtr := add(inputBytes, 0x20) // Pointer to the first character in the bytes array
+            let inputPtr := add(inputBytes, 0x40) // Pointer to the first character in the bytes array
             firstChar := mload(inputPtr)           // Load the first character byte
         }
 
         return firstChar;
     }
 }
+
+contract StringExample {
+
+    // error - does't work
+    // function getString()  external pure returns (string memory) {
+    //     string memory str="";
+
+    //     assembly {
+    //         str := "hello"
+    //     }
+
+    //     return str;
+    // }
+
+
+       function getString()  external pure returns (bytes32) {
+        bytes32  str="";
+
+        assembly {
+            str := "hello"
+        }
+
+        return str;
+    }
+}
+
+
+contract StringReturnExample {
+    function getString() public pure returns (string memory) {
+        string memory result;
+
+
+        assembly {
+            // Allocate memory for a string in Solidity format (32 bytes for length + actual string data)
+            result := mload(0x40)             // Set result to point to the free memory pointer
+            mstore(result, 5)                 // Store the length of the string (5 characters for "Hello")
+            mstore(add(result, 0x20), 0x48656c6c6f000000000000000000000000000000000000000000000000000000) // Store "Hello" (hex) in memory, padded with zeros
+
+
+            // Update free memory pointer
+            mstore(0x40, add(result, 0x40))   // Move the free memory pointer past the string data
+        }
+
+
+        return result; // Return the memory pointer containing the string
+    }
+}
+
 
 
